@@ -8,7 +8,7 @@ from flask_swagger import swagger
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from admin import setup_admin
-from models import db, User
+from models import db, User, Planet, FavoritePlanet
 #from models import Person
 
 app = Flask(__name__)
@@ -35,6 +35,45 @@ def handle_invalid_usage(error):
 @app.route('/')
 def sitemap():
     return generate_sitemap(app)
+
+# crear un endpoint que me devuelve un formulario
+@app.route('/search')
+def search_form():
+   return '''
+        <form action="/search">
+            <label for="planet_id">Planet ID:</label>
+            <input type="number" id="planet_id" name="planet_id">
+            <input type="submit" value="Search">
+        </form>
+        '''
+# crear un endpoint que implemente algun tipo de funcionalidad. Usar un parámetro dinámico
+@app.route('/word-size/<string:word>')
+def get_word_size(word):
+    return str(len(word))
+
+
+# Crear un endpoint para crear planetas. POST
+@app.route('/planet', methods=['POST'])
+def post_planet():
+    body = request.get_json()  # Obtener el request body de la solicitud
+    planet_name = body['planet_name']
+    planet = Planet(planet_name=planet_name)
+    db.session.add(planet)
+    db.session.commit()
+
+    return jsonify({'msg': 'Planet inserted with id ' + str(planet.id)}), 200
+
+# Añade un nuevo planet favorito al usuario actual con el planet id = planet_id.
+@app.route('/favorite/planet/<int:planet_id>', methods=['POST'])
+def post_favorite_planet(planet_id):
+    
+    print(str(planet_id))
+    favorite_planet = FavoritePlanet(user_id=1, planet_id=planet_id)
+    db.session.add(favorite_planet)
+    db.session.commit()
+
+    return jsonify({'msg': 'Favorited planet  success ' + str(favorite_planet.insertion_date)}), 200
+
 
 @app.route('/user', methods=['GET'])
 def handle_hello():
